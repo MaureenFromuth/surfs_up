@@ -19,7 +19,7 @@ Base.prepare(engine, reflect=True)
 # We can view all of the classes that automap found
 Base.classes.keys()
 
-RESULTS: [ ‘measurement’, ‘station]
+RESULTS: [‘measurement’, ‘station]
 
 # Save references to each table
 Measurement = Base.classes.measurement
@@ -60,8 +60,6 @@ Using the results from above, the station data contains the following informatio
 - elevation (Integer)
 
 
-
-### Purpose  
 
 ## Results
 
@@ -117,12 +115,46 @@ dec_temp_df.describe()
 ![Descriptive Statistics for Temperatures in December in Oahu](https://github.com/MaureenFromuth/surfs_up/blob/master/Descriptive%20Statistics%20for%20Temperatures%20in%20June%20in%20Oahu.png)
 
 
-*Difference 1 - 
+*Difference 1 - The Minimum Temperature in December is 8 Degrees Lower Than June
 
-*Difference 2 - 
+Perhaps the most notable different between June and December temperatures is the minimum temperature for each month, with June being 64 degrees and December being 56 degrees.  This is not incredibly surprising considering the time of year, but the relatively small difference compared to other states in the US does highlight the overall steady temperature despite the time of year.  
 
-*Difference 3 - 
+
+*Difference 2 - The Mean Temperature in December and June are 3 Degrees Apart
+
+While this is a relatively small difference between the two months, the mean temperature in December is about 3 degrees lower than that of June.  Of particular note, if you look at the standard deviations of both June and December, they are between 3 and 4, and the quartiles also line up very similarly with December being about 3 degrees less than June.  These numbers indicate the consistency of the temperatures around low to mid 70’s regardless of the month.  Furthermore, it reinforces the point above that, especially when compared to other states, Hawaii’s temperatures are steady despite the time of year.  
+
+
+*Difference 3 - There are Approximately 200 More Observable Data Points for June Compared to December 
+
+June has 1700 data points as compared to December in which there is 1517 data points.  This is noticeable considering the fact that December has one more calendar day than June does.  The differences in observable data points for temperature may not have any impact on the outcome of the summary statistics, but it may depending upon the cause of the difference.  For example, why aren’t the stations collecting temperatures at a regular rate - does temperature or precipitation have any impact on their ability to collect?  If it does, than this could indicate additional issues with the December data collection and thus the summary statistics.  Additional queries breaking out day of the month and year-over-year collection per day analysis should be done to determine the cause of the difference.  
+
+
 
 ## Summary
 
-high level results and two additional queiries
+Overall, the temperatures between June and December are comparable (mean temp of this 74.9 vs. 71.0, respectively) with the exception of the minimum temperature.  The minimum temperature differences, however, are still relatively close (only 8 degrees apart), and further the assessment that the temperatures in Oahu stay fairly consistent year round.  
+
+There is additional analysis and queries that can be done to better understand the reason for the differences in collected temperatures in December and June.  More specifically, we should use a groupby function against both December and June dataframe for the year and also the day of the month.  We could see if there are any trends that are noticeable within collection.  
+
+```
+june_temp_df[['year','month','day']] = june_temp_df['Date'].str.split('-',expand=True).apply(pd.to_numeric)
+june_temp_df= june_temp_df.groupby('year').count()['Date']
+
+dec_temp_df[['year','month','day']] = dec_temp_df['Date'].str.split('-',expand=True).apply(pd.to_numeric)
+dec_temp_df= dec_temp_df.groupby('year').count()['Date']
+```
+
+Using this code and plotting it on a bar chart, you can see that a major reason for the difference is a lack of data from 2017 for the month of December.  June recorded approximately 200 collections in 2017, which is likely responsible for the difference in data points between the two months.  The lack of collection in December 2017 may be due to the date the data was delivered, i.e. they delivered it sometime between the end of June 2017 and the beginning of December 2017 and therefore the data was not collected/provided.
+
+
+Another query you can do is group by day of the month rather than year.  In doing so, you can see if there are any major differences in the daily counts between the two months.  Of note, because we already know that December 2017 wasn’t recorded in this dataset, we will like see about 10-15 collections less per day in December than in June.   
+
+
+```
+june_temp_df_day= june_temp_df.groupby(‘day’).count()['Date']
+
+dec_temp_df_day= dec_temp_df.groupby(‘day’).count()['Date']
+```
+
+Using this code and plotting the results on a bar chart, you immediately see the differences in daily collect of about 10-15 as we anticipated.  A unique trend, however, is clearly visible on 25 December, a federal holiday, with a noticeable decrease in collected temperatures as compared to the other days.  Seeing this leads to questions about how the temperature is collected - is it manually done or done automatically.  If it is done manually, do the federal workers have a day off and that’s why the daily collect is lower?  These questions may not be answered by the existing data, but does lead to follow-on questions for the data owners. 
